@@ -1,0 +1,150 @@
+.anniversaries-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.anniversaries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.anniversary-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.anniversary-card:hover {
+  transform: translateX(4px);
+  border-color: var(--accent);
+}
+
+.anniversary-card.past {
+  opacity: 0.6;
+}
+
+.anniversary-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.date-day {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.date-month {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.anniversary-info {
+  flex: 1;
+}
+
+.anniversary-name {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.anniversary-full-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.anniversary-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 11px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.anniversary-countdown {
+  text-align: center;
+  min-width: 60px;
+}
+
+.days-number {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.days-number.past {
+  color: var(--text-muted);
+}
+
+.days-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+  .anniversary-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .anniversary-date {
+    min-width: 45px;
+    padding: 10px;
+  }
+
+  .date-day {
+    font-size: 20px;
+  }
+
+  .anniversary-name {
+    font-size: 15px;
+  }
+
+  .days-number {
+    font-size: 24px;
+  }
+}
