@@ -15,6 +15,12 @@ export default function Home() {
     );
   }
 
+  // 直接从 coupleInfo 读取（用户保存个人资料时会同步到这里）
+  const name1 = coupleInfo?.name1 || '他';
+  const name2 = coupleInfo?.name2 || '她';
+  const avatar1 = coupleInfo?.avatar1 || '';
+  const avatar2 = coupleInfo?.avatar2 || '';
+
   // 计算下一个纪念日
   const now = new Date();
   let nextAnniversary = null;
@@ -44,23 +50,23 @@ export default function Home() {
         <div className="couple-header fade-in">
           <div className="couple-avatars">
             <div className="avatar">
-              {coupleInfo?.avatar1 ? (
-                <img src={coupleInfo.avatar1} alt={coupleInfo.name1} />
+              {avatar1 ? (
+                <img src={avatar1} alt={name1} />
               ) : (
-                <span>{coupleInfo?.name1?.[0] || '他'}</span>
+                <span>{name1[0] || '他'}</span>
               )}
             </div>
             <div className="heart-connector">♥</div>
             <div className="avatar">
-              {coupleInfo?.avatar2 ? (
-                <img src={coupleInfo.avatar2} alt={coupleInfo.name2} />
+              {avatar2 ? (
+                <img src={avatar2} alt={name2} />
               ) : (
-                <span>{coupleInfo?.name2?.[0] || '她'}</span>
+                <span>{name2[0] || '她'}</span>
               )}
             </div>
           </div>
           <h1 className="couple-names">
-            {coupleInfo?.name1 || '他'} & {coupleInfo?.name2 || '她'}
+            {name1} & {name2}
           </h1>
         </div>
 

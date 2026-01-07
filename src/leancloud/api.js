@@ -97,14 +97,23 @@ export async function getPosts() {
   try {
     const query = new AV.Query('Post');
     query.descending('createdAt');
+    query.include('author'); // 包含作者信息
     const results = await query.find();
-    return results.map(obj => ({
-      id: obj.id,
-      content: obj.get('content'),
-      images: obj.get('images') || [],
-      likes: obj.get('likes') || 0,
-      createdAt: obj.createdAt
-    }));
+    return results.map(obj => {
+      const author = obj.get('author');
+      return {
+        id: obj.id,
+        content: obj.get('content'),
+        images: obj.get('images') || [],
+        likes: obj.get('likes') || 0,
+        createdAt: obj.createdAt,
+        author: author ? {
+          id: author.id,
+          nickname: author.get('nickname') || '匿名',
+          avatar: author.get('avatar') || ''
+        } : null
+      };
+    });
   } catch (error) {
     if (error.code === 101) {
       return [];
@@ -116,13 +125,31 @@ export async function getPosts() {
 export async function createPost(data) {
   const Post = AV.Object.extend('Post');
   const obj = new Post();
+  const currentUser = AV.User.current();
+
   obj.set('content', data.content);
   obj.set('images', data.images || []);
   obj.set('likes', 0);
+  if (currentUser) {
+    obj.set('author', currentUser); // 关联作者
+  }
   return await obj.save();
 }
 
 export async function deletePost(id) {
+  // 先删除该帖子的所有评论
+  try {
+    const query = new AV.Query('Comment');
+    query.equalTo('postId', id);
+    const comments = await query.find();
+    if (comments.length > 0) {
+      await AV.Object.destroyAll(comments);
+    }
+  } catch (error) {
+    console.error('删除评论失败:', error);
+  }
+
+  // 再删除帖子
   const obj = AV.Object.createWithoutData('Post', id);
   return await obj.destroy();
 }
@@ -164,6 +191,33 @@ export async function createComment(data) {
   return await obj.save();
 }
 
+export async function deleteComment(id) {
+  const obj = AV.Object.createWithoutData('Comment', id);
+  return await obj.destroy();
+}
+
+// 获取所有评论（用于后台管理）
+export async function getAllComments() {
+  try {
+    const query = new AV.Query('Comment');
+    query.descending('createdAt');
+    query.limit(500);
+    const results = await query.find();
+    return results.map(obj => ({
+      id: obj.id,
+      postId: obj.get('postId'),
+      nickname: obj.get('nickname'),
+      content: obj.get('content'),
+      createdAt: obj.createdAt
+    }));
+  } catch (error) {
+    if (error.code === 101) {
+      return [];
+    }
+    throw error;
+  }
+}
+
 // ============ 文件上传 ============
 export async function uploadFile(file) {
   const avFile = new AV.File(file.name, file);
@@ -189,4 +243,87 @@ export async function logout() {
 
 export function getCurrentUser() {
   return AV.User.current();
+}
+
+// ============ 用户资料 ============
+export async function getCurrentUserProfile() {
+  const user = AV.User.current();
+  if (!user) return null;
+
+  // 确保获取完整属性
+  await user.fetch();
+  return {
+    id: user.id,
+    username: user.getUsername(),
+    nickname: user.get('nickname') || user.getUsername(),
+    avatar: user.get('avatar') || '',
+    role: user.get('role') || ''
+  };
+}
+
+export async function updateUserProfile({ nickname, avatar }) {
+  const user = AV.User.current();
+  if (!user) throw new Error('未登录');
+
+  if (nickname !== undefined) user.set('nickname', nickname);
+  if (avatar !== undefined) user.set('avatar', avatar);
+
+  await user.save();
+
+  // 同时更新 CoupleInfo 表，这样首页可以读取
+  const role = user.get('role');
+  if (role === 'person1' || role === 'person2') {
+    try {
+      let coupleInfo;
+      const query = new AV.Query('CoupleInfo');
+      const results = await query.find();
+
+      if (results.length > 0) {
+        coupleInfo = results[0];
+      } else {
+        const CoupleInfo = AV.Object.extend('CoupleInfo');
+        coupleInfo = new CoupleInfo();
+      }
+
+      if (role === 'person1') {
+        if (nickname !== undefined) coupleInfo.set('name1', nickname);
+        if (avatar !== undefined) coupleInfo.set('avatar1', avatar);
+      } else {
+        if (nickname !== undefined) coupleInfo.set('name2', nickname);
+        if (avatar !== undefined) coupleInfo.set('avatar2', avatar);
+      }
+
+      await coupleInfo.save();
+    } catch (error) {
+      console.error('同步到 CoupleInfo 失败:', error);
+    }
+  }
+
+  return user;
+}
+
+// 获取两位情侣的公开信息
+export async function getCoupleUsers() {
+  try {
+    const query = new AV.Query('_User');
+    query.containedIn('role', ['person1', 'person2']);
+    query.select(['nickname', 'avatar', 'role']); // 只选择需要的字段
+    const users = await query.find();
+
+    console.log('getCoupleUsers result:', users.length, 'users found');
+
+    return users.map(u => ({
+      id: u.id,
+      nickname: u.get('nickname') || u.getUsername?.() || '',
+      avatar: u.get('avatar') || '',
+      role: u.get('role')
+    }));
+  } catch (error) {
+    // 如果是权限问题，打印提示
+    console.error('获取情侣用户失败:', error.code, error.message);
+    if (error.code === 119 || error.code === 403) {
+      console.warn('提示：需要在 LeanCloud 控制台设置 _User 表的 find 权限为"所有用户"');
+    }
+    return [];
+  }
 }

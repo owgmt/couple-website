@@ -5,9 +5,11 @@ const DataContext = createContext(null);
 
 export function DataProvider({ children }) {
   const [coupleInfo, setCoupleInfo] = useState(null);
+  const [coupleUsers, setCoupleUsers] = useState([]);
   const [anniversaries, setAnniversaries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
@@ -21,9 +23,16 @@ export function DataProvider({ children }) {
         const currentUser = api.getCurrentUser();
         setUser(currentUser);
 
+        // 如果已登录，获取完整用户资料
+        if (currentUser) {
+          const profile = await api.getCurrentUserProfile();
+          setUserProfile(profile);
+        }
+
         // 并行加载所有数据
-        const [couple, anns, postList] = await Promise.all([
+        const [couple, users, anns, postList] = await Promise.all([
           api.getCoupleInfo().catch(() => null),
+          api.getCoupleUsers().catch(() => []),
           api.getAnniversaries().catch(() => []),
           api.getPosts().catch(() => [])
         ]);
@@ -33,6 +42,7 @@ export function DataProvider({ children }) {
           name2: '她',
           togetherDate: new Date().toISOString().split('T')[0]
         });
+        setCoupleUsers(users);
         setAnniversaries(anns);
         setPosts(postList);
       } catch (error) {
@@ -82,6 +92,9 @@ export function DataProvider({ children }) {
   const login = useCallback(async (username, password) => {
     const loggedUser = await api.login(username, password);
     setUser(loggedUser);
+    // 获取用户资料
+    const profile = await api.getCurrentUserProfile();
+    setUserProfile(profile);
     return loggedUser;
   }, []);
 
@@ -89,6 +102,33 @@ export function DataProvider({ children }) {
   const logout = useCallback(async () => {
     await api.logout();
     setUser(null);
+    setUserProfile(null);
+  }, []);
+
+  // 更新用户资料
+  const updateProfile = useCallback(async (data) => {
+    await api.updateUserProfile(data);
+    setUserProfile(prev => ({
+      ...prev,
+      nickname: data.nickname !== undefined ? data.nickname : prev.nickname,
+      avatar: data.avatar !== undefined ? data.avatar : prev.avatar
+    }));
+    // 同时更新 coupleUsers 列表
+    setCoupleUsers(prev => prev.map(u =>
+      u.id === userProfile?.id
+        ? { ...u, nickname: data.nickname || u.nickname, avatar: data.avatar || u.avatar }
+        : u
+    ));
+  }, [userProfile?.id]);
+
+  // 刷新情侣用户列表
+  const refreshCoupleUsers = useCallback(async () => {
+    try {
+      const users = await api.getCoupleUsers();
+      setCoupleUsers(users);
+    } catch (error) {
+      console.error('Failed to refresh couple users:', error);
+    }
   }, []);
 
   // 点赞（本地乐观更新）
@@ -111,19 +151,25 @@ export function DataProvider({ children }) {
 
   const value = {
     coupleInfo,
+    coupleUsers,
     anniversaries,
     posts,
     user,
+    userProfile,
     loading,
     refreshPosts,
     refreshAnniversaries,
     refreshCoupleInfo,
+    refreshCoupleUsers,
     login,
     logout,
+    updateProfile,
     likePost,
     setCoupleInfo,
+    setCoupleUsers,
     setAnniversaries,
-    setPosts
+    setPosts,
+    setUserProfile
   };
 
   return (

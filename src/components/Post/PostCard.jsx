@@ -1,14 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useData } from '../../context/DataContext';
+import * as api from '../../leancloud/api';
 import CommentSection from '../Comment/CommentSection';
 import './PostCard.css';
 
 export default function PostCard({ post }) {
   const { likePost } = useData();
   const [likes, setLikes] = useState(post.likes || 0);
-  const [liked, setLiked] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(true);
+  const commentInputRef = useRef(null);
+
+  // 从 localStorage 读取点赞状态
+  const getLikedPosts = () => {
+    try {
+      return JSON.parse(localStorage.getItem('likedPosts') || '[]');
+    } catch {
+      return [];
+    }
+  };
+
+  const [liked, setLiked] = useState(() => getLikedPosts().includes(post.id));
+
+  // 加载评论
+  useEffect(() => {
+    async function loadComments() {
+      try {
+        const data = await api.getComments(post.id);
+        setComments(data);
+      } catch (error) {
+        console.error('Failed to load comments:', error);
+      } finally {
+        setLoadingComments(false);
+      }
+    }
+    loadComments();
+  }, [post.id]);
 
   async function handleLike() {
     if (liked) return;
@@ -16,12 +44,33 @@ export default function PostCard({ post }) {
     try {
       setLikes(prev => prev + 1);
       setLiked(true);
+
+      // 保存到 localStorage
+      const likedPosts = getLikedPosts();
+      likedPosts.push(post.id);
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+
       await likePost(post.id);
     } catch (error) {
       console.error('Error liking post:', error);
+      // 回滚
       setLikes(prev => prev - 1);
       setLiked(false);
+
+      // 从 localStorage 移除
+      const likedPosts = getLikedPosts().filter(id => id !== post.id);
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
     }
+  }
+
+  function handleCommentClick() {
+    // 滚动到评论输入框
+    commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    commentInputRef.current?.focus();
+  }
+
+  function handleNewComment(newComment) {
+    setComments(prev => [newComment, ...prev]);
   }
 
   function formatDate(date) {
@@ -32,7 +81,7 @@ export default function PostCard({ post }) {
 
     if (diff < 60 * 60 * 1000) {
       const minutes = Math.floor(diff / (60 * 1000));
-      return `${minutes} 分钟前`;
+      return minutes <= 0 ? '刚刚' : `${minutes} 分钟前`;
     }
     if (diff < 24 * 60 * 60 * 1000) {
       const hours = Math.floor(diff / (60 * 60 * 1000));
@@ -53,13 +102,17 @@ export default function PostCard({ post }) {
 
   return (
     <article className="post-card fade-in">
-      {/* 帖子头部 */}
+      {/* 帖子头部 - 显示作者信息 */}
       <div className="post-header">
         <div className="post-avatar">
-          <span>♥</span>
+          {post.author?.avatar ? (
+            <img src={post.author.avatar} alt={post.author.nickname} />
+          ) : (
+            <span>{post.author?.nickname?.[0] || '♥'}</span>
+          )}
         </div>
         <div className="post-meta">
-          <span className="post-author">我们的日常</span>
+          <span className="post-author">{post.author?.nickname || '我们'}</span>
           <span className="post-time">{formatDate(post.createdAt)}</span>
         </div>
       </div>
@@ -120,15 +173,21 @@ export default function PostCard({ post }) {
         </button>
         <button
           className="action-btn comment-btn"
-          onClick={() => setShowComments(!showComments)}
+          onClick={handleCommentClick}
         >
           <span className="action-icon">💬</span>
-          <span className="action-text">评论</span>
+          <span className="action-text">发评论</span>
         </button>
       </div>
 
-      {/* 评论区 */}
-      {showComments && <CommentSection postId={post.id} />}
+      {/* 评论区 - 始终显示 */}
+      <CommentSection
+        postId={post.id}
+        comments={comments}
+        loading={loadingComments}
+        onNewComment={handleNewComment}
+        inputRef={commentInputRef}
+      />
     </article>
   );
 }

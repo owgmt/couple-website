@@ -4,7 +4,57 @@
   border-top: 1px solid var(--border);
 }
 
-/* 评论表单 */
+/* 内联评论表单 */
+.comment-form-inline {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.comment-nickname-inline {
+  width: 80px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.comment-content-inline {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.comment-submit-inline {
+  padding: 8px 16px;
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.comment-submit-inline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 查看更多按钮 */
+.show-more-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px 0;
+  text-align: left;
+  width: 100%;
+}
+
+.show-more-btn:hover {
+  text-decoration: underline;
+}
+
+/* 旧版评论表单（兼容保留） */
 .comment-form {
   display: flex;
   flex-direction: column;
@@ -111,5 +161,23 @@
 
   .comment-submit {
     align-self: flex-end;
+  }
+
+  /* 内联表单移动端适配 */
+  .comment-form-inline {
+    flex-wrap: wrap;
+  }
+
+  .comment-nickname-inline {
+    width: 100%;
+  }
+
+  .comment-content-inline {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .comment-submit-inline {
+    width: auto;
   }
 }

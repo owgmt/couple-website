@@ -20,6 +20,77 @@
   gap: 16px;
 }
 
+/* 角色选择 */
+.role-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.role-options {
+  display: flex;
+  gap: 12px;
+}
+
+.role-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-option:hover {
+  border-color: var(--text-muted);
+}
+
+.role-option.selected {
+  border-color: var(--accent);
+  background: rgba(183, 110, 121, 0.1);
+}
+
+.role-option input {
+  display: none;
+}
+
+.role-option span {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+/* 切换登录/注册 */
+.switch-mode {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
 .error-text {
   color: #ff6b6b;
   font-size: 14px;
@@ -35,6 +106,51 @@
 
 .admin-header h1 {
   font-size: 28px;
+}
+
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.admin-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-avatar span {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.admin-user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-user-text h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.admin-username {
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 /* 标签页 */
@@ -80,7 +196,8 @@
 /* 表单样式 */
 .post-form,
 .ann-form,
-.settings-form {
+.settings-form,
+.profile-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -89,6 +206,52 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+
+/* 头像上传区域 */
+.avatar-upload-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.current-avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.current-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.current-avatar-large span {
+  font-size: 40px;
+  color: var(--accent);
+}
+
+.avatar-upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avatar-upload-controls .hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 .textarea {
@@ -201,12 +364,52 @@
   background: #a00000;
 }
 
+/* 评论管理样式 */
+.comment-item-admin {
+  flex-wrap: wrap;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.comment-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.comment-text-admin {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.empty-hint {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+}
+
 /* 移动端适配 */
 @media (max-width: 640px) {
   .admin-header {
     flex-direction: column;
     gap: 16px;
     text-align: center;
+  }
+
+  .admin-user-info {
+    flex-direction: column;
+    gap: 8px;
   }
 
   .admin-tabs {
@@ -223,5 +426,14 @@
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
+  }
+
+  .avatar-upload-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .avatar-upload-controls {
+    align-items: center;
   }
 }
