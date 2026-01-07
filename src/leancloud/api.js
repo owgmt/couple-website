@@ -97,21 +97,19 @@ export async function getPosts() {
   try {
     const query = new AV.Query('Post');
     query.descending('createdAt');
-    query.include('author'); // 包含作者信息
     const results = await query.find();
     return results.map(obj => {
-      const author = obj.get('author');
       return {
         id: obj.id,
         content: obj.get('content'),
         images: obj.get('images') || [],
         likes: obj.get('likes') || 0,
         createdAt: obj.createdAt,
-        author: author ? {
-          id: author.id,
-          nickname: author.get('nickname') || '匿名',
-          avatar: author.get('avatar') || ''
-        } : null
+        // 优先使用冗余存储的作者信息
+        author: {
+          nickname: obj.get('authorNickname') || '匿名',
+          avatar: obj.get('authorAvatar') || ''
+        }
       };
     });
   } catch (error) {
@@ -132,6 +130,9 @@ export async function createPost(data) {
   obj.set('likes', 0);
   if (currentUser) {
     obj.set('author', currentUser); // 关联作者
+    // 冗余存储作者信息，避免权限问题导致无法读取
+    obj.set('authorNickname', currentUser.get('nickname') || currentUser.getUsername());
+    obj.set('authorAvatar', currentUser.get('avatar') || '');
   }
   return await obj.save();
 }
